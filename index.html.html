@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>แดชบอร์ดดัชนีลูกน้ำยุงลาย (HI / CI / BI) - เขต รพ.หนองบัวแดง</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0f766e;
+      --primary-dark: #115e59;
+      --accent: #0284c7;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --safe-bg: #dcfce7;
+      --safe-tx: #166534;
+      --warn-bg: #fef3c7;
+      --warn-tx: #92400e;
+      --danger-bg: #fee2e2;
+      --danger-tx: #991b1b;
+    }
+    * { box-sizing: border-box; font-family: 'Sarabun', sans-serif; }
+    body { margin: 0; background: var(--bg); color: var(--text); line-height: 1.5; }
+    .container { max-width: 1280px; margin: 0 auto; padding: 18px; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      padding: 22px 26px;
+      border-radius: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 6px 18px rgba(15, 118, 110, 0.18);
+      margin-bottom: 16px;
+    }
+    .header h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+    .header p { margin: 0; font-size: 14px; opacity: 0.92; }
+    .header-meta {
+      background: rgba(255, 255, 255, 0.14);
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      text-align: right;
+    }
+
+    /* Filter Bar */
+    .filter-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px 20px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-size: 12.5px; font-weight: 700; color: #334155; }
+    .field select, .field input {
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid #cbd5e1;
+      font-size: 13.5px;
+      background: #fff;
+      color: var(--text);
+    }
+    .filter-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--border);
+      font-size: 13px;
+    }
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      cursor: pointer;
+      font-weight: 600;
+      color: #334155;
+    }
+    .btn {
+      padding: 8px 14px;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-outline { background: #fff; color: #334155; border: 1px solid #cbd5e1; }
+    .btn-outline:hover { background: #f8fafc; }
+
+    /* KPI Cards */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .kpi-card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    }
+    .kpi-label { font-size: 13px; font-weight: 700; color: var(--muted); }
+    .kpi-num { font-size: 28px; font-weight: 700; color: var(--primary); margin: 4px 0; }
+    .kpi-sub { font-size: 12px; color: var(--muted); }
+
+    /* Charts & Sections */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      margin-bottom: 16px;
+    }
+    .card-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .card-title { margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; }
+    .card-note { font-size: 12px; color: var(--muted); }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      white-space: nowrap;
+    }
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover td { background: #f8fafc; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+    .b-safe { background: var(--safe-bg); color: var(--safe-tx); }
+    .b-warn { background: var(--warn-bg); color: var(--warn-tx); }
+    .b-danger { background: var(--danger-bg); color: var(--danger-tx); }
+    .b-epi { background: #e0f2fe; color: #0369a1; }
+
+    .alert-box {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 640px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .header h1 { font-size: 19px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1>แดชบอร์ดสถานการณ์ดัชนีลูกน้ำยุงลาย (HI / CI / BI)</h1>
+        <p>เขตโรงพยาบาลหนองบัวแดง ต.หนองบัวแดง อ.หนองบัวแดง จ.ชัยภูมิ — แยกตามหมวดหมู่และสัปดาห์ระบาด</p>
+      </div>
+      <div class="header-meta">
+        <div>แหล่งข้อมูล: <strong>การสำรวจและคำนวณค่าดัชนีลูกน้ำยุงลาย</strong></div>
+        <div>ข้อมูลล่าสุดในชีต: <strong>13 พ.ย. 2569 (Wk 45)</strong> | ปัจจุบัน: <strong>22 พ.ย. 2569 (Wk 47)</strong></div>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <strong>หมายเหตุการคำนวณ:</strong> ระบบคำนวณค่า <strong>HI</strong>, <strong>CI</strong> และ <strong>BI</strong> จากจำนวนที่สำรวจและจำนวนที่พบลูกน้ำจริงในแต่ละหมวดหมู่ (<strong>บ้าน, วัด, ร.ร., สถานที่ราชการ</strong>) โดยนับ <strong>1 แถวต่อ 1 จุด/หมู่บ้านที่สำรวจ</strong> (ในหมวดวัด/ร.ร./สถานที่ราชการ หากระบุจำนวนภาชนะที่สำรวจหรือระบุชื่อสถานที่ถือว่ามีการสำรวจในรอบนั้น) และจัดกลุ่มตาม <strong>สัปดาห์ระบาด (Epi Week: อาทิตย์–เสาร์)</strong>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+      <div class="filter-grid">
+        <div class="field">
+          <label for="epiWeekFilter">สัปดาห์ระบาด (Epi Week)</label>
+          <select id="epiWeekFilter" onchange="onEpiWeekChange()">
+            <option value="ALL">ทุกสัปดาห์ระบาด</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="startDate">ตั้งแต่วันที่สำรวจ</label>
+          <input type="date" id="startDate" onchange="renderAll()" />
+        </div>
+        <div class="field">
+          <label for="endDate">ถึงวันที่สำรวจ</label>
+          <input type="date" id="endDate" onchange="renderAll()" />
+        </div>
+        <div class="field">
+          <label for="muniFilter">เขตเทศบาลตำบล</label>
+          <select id="muniFilter" onchange="renderAll()">
+            <option value="ALL">ทุกเขตเทศบาล</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="villageFilter">หมู่บ้าน / พื้นที่</label>
+          <select id="villageFilter" onchange="renderAll()">
+            <option value="ALL">ทุกหมู่บ้าน</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="catFilter">หมวดหมู่สถานที่</label>
+          <select id="catFilter" onchange="renderAll()">
+            <option value="ALL">ทุกหมวดหมู่ (4 หมวด)</option>
+            <option value="บ้าน">บ้าน</option>
+            <option value="วัด">วัด</option>
+            <option value="ร.ร.">ร.ร.</option>
+            <option value="สถานที่ราชการ">สถานที่ราชการ</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <label class="checkbox-label">
+          <input type="checkbox" id="dedupCheckbox" checked onchange="renderAll()" />
+          <span>ตัดรายการส่งซ้ำวันเดียวกัน (เช่น ม.12 บ้านใหม่ชัยมงคล วันที่ 6/11/2026)</span>
+        </label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="selectLatestEpiWeek()">ดูสัปดาห์ระบาดล่าสุด</button>
+          <button class="btn btn-primary" onclick="resetFilters()">รีเซ็ตตัวกรองทั้งหมด</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Charts -->
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">เปรียบเทียบ HI, CI, BI แยกตามหมวดหมู่</h2>
+          <span class="card-note">บ้าน / วัด / ร.ร. / สถานที่ราชการ</span>
+        </div>
+        <canvas id="categoryChart" height="230"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">แนวโน้มรายสัปดาห์ระบาด (Epi Week)</h2>
+          <span class="card-note">เปรียบเทียบค่า HI (%) และ CI (%) รายสัปดาห์</span>
+        </div>
+        <canvas id="epiTrendChart" height="230"></canvas>
+      </div>
+    </div>
+
+    <!-- Category Summary Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">สรุปค่าดัชนี HI, CI, BI แยกตามหมวดหมู่</h2>
+        <span class="card-note">เกณฑ์บ้าน: HI &lt; 10%, CI &lt; 5%, BI &lt; 50 | เกณฑ์วัด/ร.ร./ราชการ: ปลอดลูกน้ำ (0%)</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>หมวดหมู่</th>
+              <th class="num">หน่วย/จุดที่สำรวจ</th>
+              <th class="num">จุดที่พบลูกน้ำ</th>
+              <th class="num">ภาชนะที่สำรวจ</th>
+              <th class="num">ภาชนะที่พบลูกน้ำ</th>
+              <th class="num">HI (%)</th>
+              <th class="num">CI (%)</th>
+              <th class="num">BI</th>
+              <th>สถานะเกณฑ์</th>
+            </tr>
+          </thead>
+          <tbody id="categoryTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Weekly Epi Breakdown Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">สรุปสถานการณ์แยกตามสัปดาห์ระบาด (Epidemiological Week)</h2>
+        <span class="card-note">คลิกที่สัปดาห์ในตัวกรองด้านบนเพื่อเจาะลึกข้อมูลรายสัปดาห์</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>สัปดาห์ระบาด</th>
+              <th>ช่วงวันที่ของสัปดาห์ (อา.–ส.)</th>
+              <th class="num">จำนวนรายงาน</th>
+              <th class="num">บ้านสำรวจ</th>
+              <th class="num">HI บ้าน (%)</th>
+              <th class="num">CI บ้าน (%)</th>
+              <th class="num">BI บ้าน</th>
+              <th class="num">CI วัด (%)</th>
+              <th class="num">CI ร.ร. (%)</th>
+              <th class="num">CI ราชการ (%)</th>
+            </tr>
+          </thead>
+          <tbody id="epiTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Village Ranking Table -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">ตารางสถานการณ์รายหมู่บ้าน / พื้นที่รับผิดชอบ</h2>
+        <span class="card-note">เรียงตามค่า HI (%) จากมากไปน้อย</span>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>อันดับ</th>
+              <th>หมู่บ้าน / พื้นที่</th>
+              <th>เขตเทศบาล</th>
+              <th>สัปดาห์ล่าสุด</th>
+              <th class="num">บ้านสำรวจ</th>
+              <th class="num">บ้านพบ</th>
+              <th class="num">HI (%)</th>
+              <th class="num">ภาชนะสำรวจ</th>
+              <th class="num">ภาชนะพบ</th>
+              <th class="num">CI (%)</th>
+              <th class="num">BI</th>
+              <th>ระดับความเสี่ยง</th>
+            </tr>
+          </thead>
+          <tbody id="villageTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ข้อมูลจริงจาก Google Sheet: การสำรวจและคำนวณค่าดัชนีลูกน้ำยุงลาย (การตอบกลับ)
+    const RAW_ROWS = [
+      { ts: "5/11/2026, 15:47:21", village: "ม.12 บ้านใหม่ชัยมงคล", date: "2026-11-06", hTotal: 250, hPos: 2, cTotal: 1500, cPos: 2, tCount: 1, tTotal: 190, tPos: 0, sName: "โรงเรียนอนุบาลหนองบัวแดง", sTotal: 25, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "6/11/2026, 7:23:06", village: "ม.12 บ้านใหม่ชัยมงคล", date: "2026-11-06", hTotal: 250, hPos: 2, cTotal: 1500, cPos: 2, tCount: 1, tTotal: 190, tPos: 0, sName: "โรงเรียนอนุบาลหนองบัวแดง", sTotal: 25, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "6/11/2026, 8:19:08", village: "ม.2 (เขตหลวงศิริ)", date: "2026-11-06", hTotal: 102, hPos: 4, cTotal: 541, cPos: 4, tCount: 1, tTotal: 1, tPos: 22, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 11:01:06", village: "ม.3 บ้านหนองไฮเหนือ", date: "2026-11-06", hTotal: 175, hPos: 19, cTotal: 1311, cPos: 22, tCount: 1, tTotal: 0, tPos: 0, sName: "", sTotal: 30, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 12:06:30", village: "ม.9 ตลาดหนองบัวแดง", date: "2026-11-06", hTotal: 265, hPos: 8, cTotal: 665, cPos: 12, tCount: 1, tTotal: 15, tPos: 2, sName: "โรงเรียนหนองบัวแดงวิทยา", sTotal: 57, sPos: 2, gTotal: 31, gPos: 2, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "6/11/2026, 12:14:48", village: "ม.18 บ้านลาดโสน", date: "2026-11-06", hTotal: 119, hPos: 3, cTotal: 871, cPos: 3, tCount: 2, tTotal: 16, tPos: 1, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 12:28:17", village: "ม.4 บ้านลาดเหนือ", date: "2026-11-06", hTotal: 249, hPos: 0, cTotal: 1580, cPos: 0, tCount: 1, tTotal: 0, tPos: 0, sName: "โรงเรียนบ้านลาดเหนือ", sTotal: 24, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 12:29:12", village: "ม.2 (เขตหนองบัวแดง)", date: "2026-11-06", hTotal: 432, hPos: 14, cTotal: 4107, cPos: 14, tCount: 1, tTotal: 69, tPos: 0, sName: "โรงเรียนบ้านราษฎร์ดำเนิน", sTotal: 80, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "6/11/2026, 12:55:22", village: "ม.7 บ้านโสกรัง", date: "2026-11-06", hTotal: 220, hPos: 3, cTotal: 1526, cPos: 4, tCount: 3, tTotal: 71, tPos: 0, sName: "โรงเรียนบ้านโสกรัง", sTotal: 16, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 13:23:44", village: "ม.5 บ้านหนองนกออก", date: "2026-11-06", hTotal: 220, hPos: 2, cTotal: 988, cPos: 2, tCount: 2, tTotal: 36, tPos: 1, sName: "โรงเรียนหนองนกออกประชาสรรค์", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "6/11/2026, 15:58:01", village: "ม.15 บ้านลาดวังม่วง", date: "2026-11-06", hTotal: 188, hPos: 15, cTotal: 988, cPos: 15, tCount: 1, tTotal: 37, tPos: 0, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "7/11/2026, 7:14:02", village: "ม.8 หนองไฮใต้", date: "2026-11-06", hTotal: 131, hPos: 8, cTotal: 1389, cPos: 16, tCount: 1, tTotal: 90, tPos: 1, sName: "โรงเรียนชุมชนหนองไฮ", sTotal: 82, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "7/11/2026, 7:36:15", village: "ม.10 หนองแห้ว", date: "2026-11-06", hTotal: 115, hPos: 6, cTotal: 1037, cPos: 6, tCount: 35, tTotal: 35, tPos: 0, sName: "โรงเรียนบ้านหนองแห้ว", sTotal: 25, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "7/11/2026, 7:43:11", village: "ม.14 บ้านโนนเก่าใหญ่", date: "2026-11-07", hTotal: 146, hPos: 17, cTotal: 752, cPos: 17, tCount: 1, tTotal: 56, tPos: 1, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "7/11/2026, 8:38:36", village: "ม.11 (เขตหลวงศิริ)บ้านหลวงศิริ", date: "2026-11-06", hTotal: 120, hPos: 6, cTotal: 629, cPos: 12, tCount: 1, tTotal: 13, tPos: 0, sName: "วิทยาลัยอาชีวะศึกษาไทเฉลิมราชชัยภูมิ", sTotal: 11, sPos: 0, gTotal: 16, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "7/11/2026, 9:04:03", village: "ม.6 บ้านโนนสะอาด", date: "2026-11-07", hTotal: 40, hPos: 2, cTotal: 28, cPos: 1, tCount: 1, tTotal: 40, tPos: 2, sName: "โรงเรียนหนองเบ็นเจริญวิทย์, ศูนย์พัฒนาเด็กเล็กหนองนกออก", sTotal: 40, sPos: 2, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "7/11/2026, 11:10:14", village: "ม.17 บ้านหนองไฮพัฒนา", date: "2026-11-06", hTotal: 188, hPos: 12, cTotal: 2105, cPos: 13, tCount: 1, tTotal: 22, tPos: 0, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "7/11/2026, 15:23:03", village: "ม.16 บ้านลาดบัวหลวง", date: "2026-11-07", hTotal: 97, hPos: 7, cTotal: 1493, cPos: 7, tCount: 1, tTotal: 60, tPos: 1, sName: "โรงเรียนเทศบาล1 (อนุบาลเด็กน่ารัก)", sTotal: 200, sPos: 1, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "8/11/2026, 11:18:49", village: "ม.11 (เขตหลวงศิริ)บ้านหลวงศิริ", date: "2026-11-06", hTotal: 180, hPos: 5, cTotal: 873, cPos: 8, tCount: 1, tTotal: 0, tPos: 18, sName: "โรงเรียนบ้านลาดใต้", sTotal: 25, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "13/11/2026, 10:05:06", village: "ม.12 บ้านใหม่ชัยมงคล", date: "2026-11-13", hTotal: 270, hPos: 2, cTotal: 1890, cPos: 3, tCount: 1, tTotal: 200, tPos: 0, sName: "โรงเรียนอนุบาลหนองบัวแดง", sTotal: 24, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "13/11/2026, 10:16:51", village: "ม.4 บ้านลาดเหนือ", date: "2026-11-13", hTotal: 249, hPos: 0, cTotal: 1580, cPos: 0, tCount: 1, tTotal: 14, tPos: 0, sName: "โรงเรียนบ้านลาดเหนือ", sTotal: 24, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "13/11/2026, 11:26:34", village: "ม.18 บ้านลาดโสน", date: "2026-11-13", hTotal: 120, hPos: 1, cTotal: 933, cPos: 1, tCount: 2, tTotal: 17, tPos: 1, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "13/11/2026, 11:32:09", village: "ม.9 ตลาดหนองบัวแดง", date: "2026-11-13", hTotal: 254, hPos: 3, cTotal: 618, cPos: 7, tCount: 1, tTotal: 16, tPos: 2, sName: "โรงเรียนหนองบัวแดงวิทยา", sTotal: 42, sPos: 0, gTotal: 29, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" },
+      { ts: "13/11/2026, 11:41:45", village: "ม.3 บ้านหนองไฮเหนือ", date: "2026-11-13", hTotal: 178, hPos: 17, cTotal: 1278, cPos: 20, tCount: 1, tTotal: 30, tPos: 0, sName: "", sTotal: 0, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหลวงศิริ" },
+      { ts: "13/11/2026, 12:06:23", village: "ม.2 (เขตหนองบัวแดง)", date: "2026-11-13", hTotal: 411, hPos: 12, cTotal: 3601, cPos: 12, tCount: 1, tTotal: 60, tPos: 0, sName: "โรงเรียนบ้านราษฎร์ดำเนิน", sTotal: 70, sPos: 0, gTotal: 0, gPos: 0, muni: "เขตเทศบาลตำบลหนองบัวแดง" }
+    ];
+
+    // คำนวณสัปดาห์ระบาดมาตรฐาน (อาทิตย์ - เสาร์)
+    function getEpiWeekInfo(dateStr) {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const dt = new Date(Date.UTC(y, m - 1, d));
+      const dayOfWeek = dt.getUTCDay(); // 0 = Sun ... 6 = Sat
+      const weekStart = new Date(dt);
+      weekStart.setUTCDate(dt.getUTCDate() - dayOfWeek);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setUTCDate(weekStart.getUTCDate() + 6);
+
+      // นับสัปดาห์ที่จากวันอาทิตย์แรกของปี (CDC / สัปดาห์ระบาดสากล)
+      const jan1 = new Date(Date.UTC(y, 0, 1));
+      const jan1Day = jan1.getUTCDay();
+      const firstSunday = new Date(jan1);
+      firstSunday.setUTCDate(jan1.getUTCDate() - jan1Day);
+      const diffDays = Math.floor((weekStart - firstSunday) / 86400000);
+      const weekNo = Math.max(1, Math.floor(diffDays / 7) + 1);
+
+      const fmt = (obj) => {
+        const yy = obj.getUTCFullYear();
+        const mm = String(obj.getUTCMonth() + 1).padStart(2, "0");
+        const dd = String(obj.getUTCDate()).padStart(2, "0");
+        return `${yy}-${mm}-${dd}`;
+      };
+      const fmtThaiShort = (obj) => {
+        const months = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        const thaiYearShort = String((obj.getUTCFullYear() + 543) % 100).padStart(2, "0");
+        return `${obj.getUTCDate()} ${months[obj.getUTCMonth()]} ${thaiYearShort}`;
+      };
+
+      const startISO = fmt(weekStart);
+      const endISO = fmt(weekEnd);
+      const key = `${y}-W${String(weekNo).padStart(2, "0")}`;
+      return {
+        key,
+        label: `Wk ${weekNo} (${y})`,
+        rangeLabel: `${fmtThaiShort(weekStart)} – ${fmtThaiShort(weekEnd)}`,
+        startISO,
+        endISO
+      };
+    }
+
+    const ENRICHED_ROWS = RAW_ROWS.map((r, idx) => ({
+      ...r,
+      id: idx + 1,
+      epi: getEpiWeekInfo(r.date)
+    }));
+
+    let catChartInstance = null;
+    let epiChartInstance = null;
+
+    function initFilters() {
+      const epiSel = document.getElementById("epiWeekFilter");
+      const uniqueEpis = [];
+      const seen = new Set();
+      ENRICHED_ROWS.forEach(r => {
+        if (!seen.has(r.epi.key)) {
+          seen.add(r.epi.key);
+          uniqueEpis.push(r.epi);
+        }
+      });
+      uniqueEpis.sort((a, b) => a.key.localeCompare(b.key));
+      uniqueEpis.forEach(ep => {
+        const opt = document.createElement("option");
+        opt.value = ep.key;
+        opt.textContent = `${ep.label} • ${ep.rangeLabel}`;
+        epiSel.appendChild(opt);
+      });
+
+      const muniSel = document.getElementById("muniFilter");
+      [...new Set(ENRICHED_ROWS.map(r => r.muni))].sort().forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        muniSel.appendChild(opt);
+      });
+
+      const vilSel = document.getElementById("villageFilter");
+      [...new Set(ENRICHED_ROWS.map(r => r.village))].sort().forEach(v => {
+        const opt = document.createElement("option");
+        opt.value = v;
+        opt.textContent = v;
+        vilSel.appendChild(opt);
+      });
+
+      const dates = ENRICHED_ROWS.map(r => r.date).sort();
+      document.getElementById("startDate").value = dates[0];
+      document.getElementById("endDate").value = dates[dates.length - 1];
+    }
+
+    function onEpiWeekChange() {
+      const epKey = document.getElementById("epiWeekFilter").value;
+      if (epKey !== "ALL") {
+        const found = ENRICHED_ROWS.find(r => r.epi.key === epKey);
+        if (found) {
+          document.getElementById("startDate").value = found.epi.startISO;
+          document.getElementById("endDate").value = found.epi.endISO;
+        }
+      }
+      renderAll();
+    }
+
+    function selectLatestEpiWeek() {
+      const sorted = [...ENRICHED_ROWS].sort((a, b) => b.epi.key.localeCompare(a.epi.key));
+      if (sorted.length > 0) {
+        document.getElementById("epiWeekFilter").value = sorted[0].epi.key;
+        onEpiWeekChange();
+      }
+    }
+
+    function resetFilters() {
+      document.getElementById("epiWeekFilter").value = "ALL";
+      document.getElementById("muniFilter").value = "ALL";
+      document.getElementById("villageFilter").value = "ALL";
+      document.getElementById("catFilter").value = "ALL";
+      document.getElementById("dedupCheckbox").checked = true;
+      const dates = ENRICHED_ROWS.map(r => r.date).sort();
+      document.getElementById("startDate").value = dates[0];
+      document.getElementById("endDate").value = dates[dates.length - 1];
+      renderAll();
+    }
+
+    function getFilteredRows() {
+      const epKey = document.getElementById("epiWeekFilter").value;
+      const start = document.getElementById("startDate").value;
+      const end = document.getElementById("endDate").value;
+      const muni = document.getElementById("muniFilter").value;
+      const village = document.getElementById("villageFilter").value;
+      const dedup = document.getElementById("dedupCheckbox").checked;
+
+      let rows = ENRICHED_ROWS.filter(r => {
+        if (epKey !== "ALL" && r.epi.key !== epKey) return false;
+        if (start && r.date < start) return false;
+        if (end && r.date > end) return false;
+        if (muni !== "ALL" && r.muni !== muni) return false;
+        if (village !== "ALL" && r.village !== village) return false;
+        return true;
+      });
+
+      if (dedup) {
+        const seenKey = new Set();
+        const deduped = [];
+        // เก็บรายการล่าสุดตามลำดับแถวเมื่อหมู่บ้าน+วันที่ซ้ำกัน
+        for (let i = rows.length - 1; i >= 0; i--) {
+          const key = `${rows[i].village}__${rows[i].date}`;
+          if (!seenKey.has(key)) {
+            seenKey.add(key);
+            deduped.unshift(rows[i]);
+          }
+        }
+        rows = deduped;
+      }
+      return rows;
+    }
+
+    function calcCategoryMetrics(rows, category) {
+      let unitsSurveyed = 0;
+      let unitsPos = 0;
+      let cTotal = 0;
+      let cPos = 0;
+
+      rows.forEach(r => {
+        if (category === "บ้าน") {
+          unitsSurveyed += r.hTotal;
+          unitsPos += r.hPos;
+          cTotal += r.cTotal;
+          cPos += r.cPos;
+        } else if (category === "วัด") {
+          const surveyed = (r.tCount > 0 || r.tTotal > 0 || r.tPos > 0);
+          if (surveyed) {
+            unitsSurveyed += r.tCount > 0 ? r.tCount : 1;
+            if (r.tPos > 0) unitsPos += 1;
+          }
+          cTotal += r.tTotal;
+          cPos += r.tPos;
+        } else if (category === "ร.ร.") {
+          const surveyed = (Boolean(r.sName && r.sName.trim()) || r.sTotal > 0 || r.sPos > 0);
+          if (surveyed) {
+            unitsSurveyed += 1;
+            if (r.sPos > 0) unitsPos += 1;
+          }
+          cTotal += r.sTotal;
+          cPos += r.sPos;
+        } else if (category === "สถานที่ราชการ") {
+          const surveyed = (r.gTotal > 0 || r.gPos > 0);
+          if (surveyed) {
+            unitsSurveyed += 1;
+            if (r.gPos > 0) unitsPos += 1;
+          }
+          cTotal += r.gTotal;
+          cPos += r.gPos;
+        }
+      });
+
+      const hi = unitsSurveyed > 0 ? (unitsPos / unitsSurveyed) * 100 : 0;
+      const ci = cTotal > 0 ? (cPos / cTotal) * 100 : 0;
+      const bi = unitsSurveyed > 0 ? (cPos / unitsSurveyed) * 100 : 0;
+
+      return {
+        category,
+        unitsSurveyed,
+        unitsPos,
+        cTotal,
+        cPos,
+        hi: Number(hi.toFixed(2)),
+        ci: Number(ci.toFixed(2)),
+        bi: Number(bi.toFixed(2))
+      };
+    }
+
+    function getBadgeHTML(category, m) {
+      if (m.unitsSurveyed === 0 && m.cTotal === 0) {
+        return '<span class="badge" style="background:#f1f5f9;color:#64748b;">ไม่มีข้อมูล</span>';
+      }
+      if (category === "บ้าน") {
+        if (m.hi < 10 && m.ci < 5 && m.bi < 50) {
+          return '<span class="badge b-safe">ผ่านเกณฑ์ (HI&lt;10%)</span>';
+        }
+        return '<span class="badge b-danger">เกินเกณฑ์เฝ้าระวัง</span>';
+      }
+      if (m.cPos === 0 && m.unitsPos === 0) {
+        return '<span class="badge b-safe">ปลอดลูกน้ำ (0%)</span>';
+      }
+      return '<span class="badge b-danger">พบลูกน้ำยุงลาย</span>';
+    }
+
+    function renderAll() {
+      const rows = getFilteredRows();
+      const catFilter = document.getElementById("catFilter").value;
+      const allCats = ["บ้าน", "วัด", "ร.ร.", "สถานที่ราชการ"];
+      const activeCats = catFilter === "ALL" ? allCats : [catFilter];
+
+      const catMetricsMap = {};
+      allCats.forEach(c => {
+        catMetricsMap[c] = calcCategoryMetrics(rows, c);
+      });
+
+      // KPIs (ภาพรวมตามตัวกรองหมวดหมู่ที่เลือก)
+      let sumUnits = 0, sumUnitsPos = 0, sumCTotal = 0, sumCPos = 0;
+      activeCats.forEach(c => {
+        const m = catMetricsMap[c];
+        sumUnits += m.unitsSurveyed;
+        sumUnitsPos += m.unitsPos;
+        sumCTotal += m.cTotal;
+        sumCPos += m.cPos;
+      });
+      const kpiHI = sumUnits > 0 ? ((sumUnitsPos / sumUnits) * 100).toFixed(2) : "0.00";
+      const kpiCI = sumCTotal > 0 ? ((sumCPos / sumCTotal) * 100).toFixed(2) : "0.00";
+      const kpiBI = sumUnits > 0 ? ((sumCPos / sumUnits) * 100).toFixed(2) : "0.00";
+
+      const homeM = catMetricsMap["บ้าน"];
+      document.getElementById("kpiGrid").innerHTML = `
+        <div class="kpi-card">
+          <div class="kpi-label">ค่า HI (${catFilter === "ALL" ? "ทุกหมวดที่เลือก" : catFilter})</div>
+          <div class="kpi-num">${kpiHI}%</div>
+          <div class="kpi-sub">พบ ${sumUnitsPos.toLocaleString()} / สำรวจ ${sumUnits.toLocaleString()} หน่วย/จุด</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ค่า CI (${catFilter === "ALL" ? "ทุกหมวดที่เลือก" : catFilter})</div>
+          <div class="kpi-num">${kpiCI}%</div>
+          <div class="kpi-sub">พบ ${sumCPos.toLocaleString()} / สำรวจ ${sumCTotal.toLocaleString()} ภาชนะ</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">ค่า BI (${catFilter === "ALL" ? "ทุกหมวดที่เลือก" : catFilter})</div>
+          <div class="kpi-num">${kpiBI}</div>
+          <div class="kpi-sub">ภาชนะพบลูกน้ำต่อ 100 หน่วย/จุดสำรวจ</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">สรุปหมวดบ้าน (HI / CI / BI)</div>
+          <div class="kpi-num" style="font-size:20px;color:#0284c7;">${homeM.hi}% / ${homeM.ci}% / ${homeM.bi}</div>
+          <div class="kpi-sub">จาก ${rows.length} รายการสำรวจ (${homeM.hTotal ? homeM.unitsSurveyed.toLocaleString() : homeM.unitsSurveyed.toLocaleString()} หลัง)</div>
+        </div>
+      `;
+
+      // Category Table
+      const tableCats = catFilter === "ALL" ? allCats : [catFilter];
+      document.getElementById("categoryTableBody").innerHTML = tableCats.map(c => {
+        const m = catMetricsMap[c];
+        return `
+          <tr>
+            <td><strong>${m.category}</strong></td>
+            <td class="num">${m.unitsSurveyed.toLocaleString()}</td>
+            <td class="num">${m.unitsPos.toLocaleString()}</td>
+            <td class="num">${m.cTotal.toLocaleString()}</td>
+            <td class="num">${m.cPos.toLocaleString()}</td>
+            <td class="num"><strong>${m.hi.toFixed(2)}%</strong></td>
+            <td class="num"><strong>${m.ci.toFixed(2)}%</strong></td>
+            <td class="num"><strong>${m.bi.toFixed(2)}</strong></td>
+            <td>${getBadgeHTML(m.category, m)}</td>
+          </tr>
+        `;
+      }).join("");
+
+      // Epi Week Breakdown Table (คำนวณแยกตามสัปดาห์ระบาดเสมอเพื่อให้เทียบข้ามสัปดาห์ได้)
+      const epiKeys = [...new Set(rows.map(r => r.epi.key))].sort();
+      document.getElementById("epiTableBody").innerHTML = epiKeys.map(k => {
+        const wRows = rows.filter(r => r.epi.key === k);
+        const epInfo = wRows[0].epi;
+        const mHome = calcCategoryMetrics(wRows, "บ้าน");
+        const mTemp = calcCategoryMetrics(wRows, "วัด");
+        const mSch = calcCategoryMetrics(wRows, "ร.ร.");
+        const mGov = calcCategoryMetrics(wRows, "สถานที่ราชการ");
+        return `
+          <tr>
+            <td><span class="badge b-epi">${epInfo.label}</span></td>
+            <td>${epInfo.rangeLabel}</td>
+            <td class="num">${wRows.length}</td>
+            <td class="num">${mHome.unitsSurveyed.toLocaleString()}</td>
+            <td class="num"><strong>${mHome.hi.toFixed(2)}%</strong></td>
+            <td class="num">${mHome.ci.toFixed(2)}%</td>
+            <td class="num">${mHome.bi.toFixed(2)}</td>
+            <td class="num">${mTemp.ci.toFixed(2)}%</td>
+            <td class="num">${mSch.ci.toFixed(2)}%</td>
+            <td class="num">${mGov.ci.toFixed(2)}%</td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="10" style="text-align:center;color:#64748b;">ไม่พบข้อมูลตามตัวกรองที่เลือก</td></tr>`;
+
+      // Village Ranking Table
+      const villages = [...new Set(rows.map(r => r.village))];
+      const vilStats = villages.map(v => {
+        const vRows = rows.filter(r => r.village === v).sort((a, b) => a.date.localeCompare(b.date));
+        const latest = vRows[vRows.length - 1];
+        const mH = calcCategoryMetrics(vRows, "บ้าน");
+        return {
+          village: v,
+          muni: latest.muni,
+          epiLabel: latest.epi.label,
+          hSurveyed: mH.unitsSurveyed,
+          hPos: mH.unitsPos,
+          hi: mH.hi,
+          cSurveyed: mH.cTotal,
+          cPos: mH.cPos,
+          ci: mH.ci,
+          bi: mH.bi
+        };
+      }).sort((a, b) => b.hi - a.hi);
+
+      document.getElementById("villageTableBody").innerHTML = vilStats.map((v, idx) => {
+        let riskBadge = '<span class="badge b-safe">ต่ำ (HI &lt; 10%)</span>';
+        if (v.hi >= 10) riskBadge = '<span class="badge b-danger">สูง (HI ≥ 10%)</span>';
+        else if (v.hi >= 5) riskBadge = '<span class="badge b-warn">เฝ้าระวัง (5–9.9%)</span>';
+
+        return `
+          <tr>
+            <td>${idx + 1}</td>
+            <td><strong>${v.village}</strong></td>
+            <td>${v.muni}</td>
+            <td><span class="badge b-epi">${v.epiLabel}</span></td>
+            <td class="num">${v.hSurveyed.toLocaleString()}</td>
+            <td class="num">${v.hPos.toLocaleString()}</td>
+            <td class="num"><strong>${v.hi.toFixed(2)}%</strong></td>
+            <td class="num">${v.cSurveyed.toLocaleString()}</td>
+            <td class="num">${v.cPos.toLocaleString()}</td>
+            <td class="num">${v.ci.toFixed(2)}%</td>
+            <td class="num">${v.bi.toFixed(2)}</td>
+            <td>${riskBadge}</td>
+          </tr>
+        `;
+      }).join("") || `<tr><td colspan="12" style="text-align:center;color:#64748b;">ไม่พบข้อมูลตามตัวกรองที่เลือก</td></tr>`;
+
+      updateCharts(tableCats, catMetricsMap, epiKeys, rows);
+    }
+
+    function updateCharts(tableCats, catMetricsMap, epiKeys, rows) {
+      if (catChartInstance) catChartInstance.destroy();
+      catChartInstance = new Chart(document.getElementById("categoryChart"), {
+        type: "bar",
+        data: {
+          labels: tableCats,
+          datasets: [
+            { label: "HI (%)", data: tableCats.map(c => catMetricsMap[c].hi), backgroundColor: "#0f766e", borderRadius: 5 },
+            { label: "CI (%)", data: tableCats.map(c => catMetricsMap[c].ci), backgroundColor: "#0284c7", borderRadius: 5 },
+            { label: "BI", data: tableCats.map(c => catMetricsMap[c].bi), backgroundColor: "#f59e0b", borderRadius: 5 }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "top" } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      const epiLabels = epiKeys.map(k => rows.find(r => r.epi.key === k).epi.label);
+      const epiHomeHI = epiKeys.map(k => calcCategoryMetrics(rows.filter(r => r.epi.key === k), "บ้าน").hi);
+      const epiHomeCI = epiKeys.map(k => calcCategoryMetrics(rows.filter(r => r.epi.key === k), "บ้าน").ci);
+
+      if (epiChartInstance) epiChartInstance.destroy();
+      epiChartInstance = new Chart(document.getElementById("epiTrendChart"), {
+        type: "line",
+        data: {
+          labels: epiLabels,
+          datasets: [
+            {
+              label: "HI บ้าน (%)",
+              data: epiHomeHI,
+              borderColor: "#0f766e",
+              backgroundColor: "rgba(15, 118, 110, 0.12)",
+              tension: 0.25,
+              fill: true
+            },
+            {
+              label: "CI บ้าน (%)",
+              data: epiHomeCI,
+              borderColor: "#dc2626",
+              backgroundColor: "rgba(220, 38, 38, 0.08)",
+              tension: 0.25,
+              fill: false
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "top" } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+    }
+
+    initFilters();
+    renderAll();
+  </script>
+</body>
+</html>
